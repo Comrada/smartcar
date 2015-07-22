@@ -6,7 +6,7 @@
  * @version v1.0
  * @ide     CooCox
  * @license GNU GPL v3
- * @brief   Main module of SmartCar
+ * @brief   PWM initialization for SmartCar
  *
 @verbatim
    ----------------------------------------------------------------------
@@ -28,13 +28,14 @@
 @endverbatim
  */
 
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef PWM_H
+#define PWM_H
 #endif
 
-#include "stm32f4xx.h"
+#include <stm32f4xx.h>
+#include <stm32f4xx_gpio.h>
+#include <stm32f4xx_rcc.h>
+#include <stm32f4xx_tim.h>
 
-#define USART_BAUDRATE 115200
-
-static int RCMode = 1;
-static const int USARTLog = 1;
+void initMotorPin(GPIO_TypeDef* GPIOx, uint16_t Pin, uint8_t PinSource, uint8_t GPIO_AF);
+void initPWM(TIM_TypeDef* TIMx, uint32_t Period, uint16_t Prescaler, uint8_t Channel);

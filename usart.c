@@ -20,7 +20,7 @@
 #include "string.h"
 
 #include "main.h"
-#include "uart.h"
+#include "usart.h"
 #include "motors.h"
 
 DMA_InitTypeDef  USART_DMA_Struct;
@@ -60,7 +60,7 @@ uint8_t parseUSARTCommand(const char * command)
 {
 	if (strcmp(command, "start") == 0)
 	{
-		SoftStart(1);
+		Forward(1);
 		return 1;
 	} else if (strcmp(command, "stop") == 0)
 	{
@@ -68,11 +68,11 @@ uint8_t parseUSARTCommand(const char * command)
 		return 2;
 	} else if (strcmp(command, "left") == 0)
 	{
-		FwdLeft(1);
+		Left(1);
 		return 3;
 	} else if (strcmp(command, "right") == 0)
 	{
-		FwdRight(1);
+		Right(1);
 		return 4;
 	} else if (strcmp(command, "back") == 0)
 	{

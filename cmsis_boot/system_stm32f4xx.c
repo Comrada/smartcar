@@ -348,9 +348,9 @@
      through STLINK MCO pin of STM32F103 microcontroller. The frequency cannot be changed
      and is fixed at 8 MHz. 
      Hardware configuration needed for Nucleo Board:
-     – SB54, SB55 OFF
-     – R35 removed
-     – SB16, SB50 ON */
+     ï¿½ SB54, SB55 OFF
+     ï¿½ R35 removed
+     ï¿½ SB16, SB50 ON */
 /* #define USE_HSE_BYPASS */
 
 #if defined(USE_HSE_BYPASS)     
@@ -368,7 +368,7 @@
 /************************* PLL Parameters *************************************/
 #if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx)
 /* PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N */
-#define PLL_M      25
+#define PLL_M      8	// was 25
 #elif defined (STM32F446xx)
 #define PLL_M      8
 #elif defined (STM32F411xE)
@@ -390,7 +390,7 @@
 #endif /* STM32F446xx */ 
 
 #if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F446xx)
-#define PLL_N      360
+#define PLL_N      336	// was 360
 /* SYSCLK = PLL_VCO / PLL_P */
 #define PLL_P      2
 #endif /* STM32F40_41xxx || STM32F427_437x || STM32F429_439xx || STM32F446xx */

@@ -6,7 +6,7 @@
  * @version v1.0
  * @ide     CooCox
  * @license GNU GPL v3
- * @brief   USART for SmartCar
+ * @brief   Motors functionality for SmartCar
  *
 @verbatim
    ----------------------------------------------------------------------
@@ -28,24 +28,9 @@
 @endverbatim
  */
 
-#ifndef UART_H
-#define UART_H
+#ifndef DELAY_H
+#define DELAY_H
 #endif
 
-#include "stm32f4xx.h"
-#include "stm32f4xx_usart.h"
-#include "stm32f4xx_gpio.h"
-#include "stm32f4xx_rcc.h"
-#include "misc.h"
-
-#define RECEIVE_BUFFER_SIZE 256
-
-static const int USARTLog = 1;
-
-volatile char receive_buffer[RECEIVE_BUFFER_SIZE]; // this will hold the received string
-
-uint8_t parseUSARTCommand(const char * command);
-void sendToUSART(const char *str);
-void logToUSART(const char * message);
-void printJSONToUSART(const char * data);
-void initUSART(uint32_t baudrate);
+void Delay(uint32_t ms);
+void DelayMC(uint32_t us);
