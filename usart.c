@@ -48,15 +48,16 @@ void printJSONToUSART(const char * data)
 
 void sendToUSART(const char *str)
 {
-	char * init_buff = "\0";
-	push(sendBuffer, str);
+	//char * init_buff = "\0";
+	//push(sendBuffer, str);
 
 	DMA_DeInit(DMA2_Stream7);
-	USART_DMA_Struct.DMA_BufferSize = strlen(init_buff);
-	USART_DMA_Struct.DMA_Memory0BaseAddr = (uint32_t)init_buff;
+	USART_DMA_Struct.DMA_BufferSize = strlen(str);	//strlen(init_buff);
+	USART_DMA_Struct.DMA_Memory0BaseAddr = str;	//(uint32_t)init_buff;
 	DMA_Init(DMA2_Stream7, &USART_DMA_Struct);
 	DMA_ITConfig(DMA2_Stream7, DMA_IT_TC, ENABLE);
 	DMA2_Stream7->CR |= (uint32_t)DMA_SxCR_EN;
+	while (DMA2_Stream7->NDTR);
 }
 
 uint8_t parseUSARTCommand(const char * command)
@@ -90,7 +91,7 @@ void initUSART(uint32_t baudrate)
 {
 
 	char * init_buff = "\0";
-	sendBuffer = newStack();
+	//sendBuffer = newStack();
 
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2, ENABLE);
@@ -146,7 +147,7 @@ void initUSART(uint32_t baudrate)
 
 	USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);
 	NVIC_EnableIRQ(USART1_IRQn);
-	sendToUSART("\0");
+	//sendToUSART("\0");
 }
 
 
@@ -156,9 +157,7 @@ void DMA2_Stream7_IRQHandler(void)
 {
 	if (DMA_GetITStatus(DMA2_Stream7, DMA_IT_TCIF7))
 	{
-		// Clear DMA Stream Transfer Complete interrupt pending bit
-
-		char * data;
+		/*char * data;
 		while (data = top(sendBuffer))
 		{
 			DMA_DeInit(DMA2_Stream7);
@@ -169,7 +168,8 @@ void DMA2_Stream7_IRQHandler(void)
 			DMA2_Stream7->CR |= (uint32_t)DMA_SxCR_EN; //DMA_Cmd(DMA2_Stream7, ENABLE);
 			while (DMA2_Stream7->NDTR) {};
 			pop(sendBuffer);
-		}
+		}*/
+		// Clear DMA Stream Transfer Complete interrupt pending bit
 		DMA_ClearITPendingBit(DMA2_Stream7, DMA_IT_TCIF7);
 	}
 }
