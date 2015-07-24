@@ -33,17 +33,18 @@ void calcSpeeds(void)
 {
 	uint32_t NullSpeed = (uint32_t)(1000000 / MOTOR_PWM_FREQ);
 	speeds[0] = NullSpeed;	// 100%duty cycle, constant high level, motors stopped
-	speeds[1] = MOTOR_PWM_MAX_PULSE_WIDTH;	//~500us	50% duty cycle, maximum pulse length, when motors is starts
-	speeds[2] = (uint32_t)(MOTOR_PWM_MAX_PULSE_WIDTH / 4 * 3);	//maximum pulse length divided by 4	~375us
-	speeds[3] = (uint32_t)(MOTOR_PWM_MAX_PULSE_WIDTH / 4 * 2);	//~250us
-	speeds[4] = (uint32_t)(MOTOR_PWM_MAX_PULSE_WIDTH / 4 * 1);	//~125us
+	speeds[1] = MOTOR_PWM_MAX_PULSE_WIDTH;	//~600us	60% duty cycle, maximum pulse length, when motors is starts
+	speeds[2] = (uint32_t)(MOTOR_PWM_MAX_PULSE_WIDTH / 4 * 3);	//maximum pulse length divided by 4	~450us
+	speeds[3] = (uint32_t)(MOTOR_PWM_MAX_PULSE_WIDTH / 4 * 2);	//~300us
+	speeds[4] = (uint32_t)(MOTOR_PWM_MAX_PULSE_WIDTH / 4 * 1);	//~150us
 	speeds[5] = MOTOR_PWM_MIN_PULSE_WIDTH;	//0% duty cycle, constant low level, full speed
+	max_speed = 5;
 }
 
 /*
  * increasing speed for 'duration' in sec
  */
-void SoftStart(uint32_t Direction, uint32_t duration)
+void SoftStart(uint8_t Direction, uint8_t duration)
 {
 	uint32_t speed, delay;
 	uint16_t speed_count = sizeof(speeds) / sizeof(uint32_t);
@@ -91,6 +92,7 @@ void Forward(uint8_t speed)
 		Motor3Speed(speed);
 		Motor4Speed(speed);
 	}
+	printJSONToUSART("\"mode\":\"forward\"");
 }
 
 /*
@@ -113,43 +115,57 @@ void Back(uint8_t speed)
 	}
 }
 
-void Left(uint8_t angle)
+void Left()
 {
-	uint32_t motor1_speed = Motor1.Speed, motor4_speed = Motor4.Speed;
-	if ((Motor2.Direction == Direction_Forward) && (Motor3.Direction == Direction_Forward))
+	uint8_t motor1_speed = Motor1.Speed, motor2_speed = Motor2.Speed;
+	uint8_t motor3_speed = Motor3.Speed, motor4_speed = Motor4.Speed;
+	if (((Motor2.Direction == Direction_Forward) && (Motor3.Direction == Direction_Forward)) ||
+		((Motor2.Direction == Direction_Backward) && (Motor3.Direction == Direction_Backward)))
 	{
-		Motor1Stop();
-		Motor4Stop();
+		Motor1Speed(1);
+		Motor4Speed(1);
+		Motor2Speed(max_speed);
+		Motor3Speed(max_speed);
 		Delay(MOTOR_DELAY_FOR_TURNING);
-		Motor1Start(Direction_Forward, motor1_speed);
-		Motor4Start(Direction_Forward, motor4_speed);
-	} else if ((Motor2.Direction == Direction_Backward) && (Motor3.Direction == Direction_Backward))
+		Motor1Speed(motor1_speed);
+		Motor2Speed(motor2_speed);
+		Motor3Speed(motor3_speed);
+		Motor4Speed(motor4_speed);
+	} else if ((Motor2.Direction == Direction_None) || (Motor2.Mode == Mode_Stop))
 	{
-		Motor1Stop();
-		Motor4Stop();
+		Motor1Start(Direction_Backward, 1);
+		Motor2Start(Direction_Forward, 1);
+		Motor3Start(Direction_Forward, 1);
+		Motor4Start(Direction_Backward, 1);
 		Delay(MOTOR_DELAY_FOR_TURNING);
-		Motor1Start(Direction_Backward, motor1_speed);
-		Motor4Start(Direction_Backward, motor4_speed);
+		Stop();
 	}
 }
 
-void Right(uint8_t angle)
+void Right()
 {
-	uint32_t motor2_speed = Motor1.Speed, motor3_speed = Motor4.Speed;
-	if ((Motor1.Direction == Direction_Forward) && (Motor4.Direction == Direction_Forward))
+	uint8_t motor1_speed = Motor1.Speed, motor2_speed = Motor2.Speed;
+	uint8_t motor3_speed = Motor3.Speed, motor4_speed = Motor4.Speed;
+	if (((Motor1.Direction == Direction_Forward) && (Motor4.Direction == Direction_Forward)) ||
+		((Motor1.Direction == Direction_Backward) && (Motor4.Direction == Direction_Backward)))
 	{
-		Motor2Stop();
-		Motor3Stop();
+		Motor2Speed(1);
+		Motor3Speed(1);
+		Motor1Speed(max_speed);
+		Motor4Speed(max_speed);
 		Delay(MOTOR_DELAY_FOR_TURNING);
-		Motor2Start(Direction_Forward, motor2_speed);
-		Motor3Start(Direction_Forward, motor3_speed);
-	} else if ((Motor1.Direction == Direction_Backward) && (Motor4.Direction == Direction_Backward))
+		Motor1Speed(motor1_speed);
+		Motor2Speed(motor2_speed);
+		Motor3Speed(motor3_speed);
+		Motor4Speed(motor4_speed);
+	} else if ((Motor1.Direction == Direction_None) || (Motor4.Mode == Mode_Stop))
 	{
-		Motor2Stop();
-		Motor3Stop();
+		Motor1Start(Direction_Forward, 1);
+		Motor2Start(Direction_Backward, 1);
+		Motor3Start(Direction_Backward, 1);
+		Motor4Start(Direction_Forward, 1);
 		Delay(MOTOR_DELAY_FOR_TURNING);
-		Motor2Start(Direction_Backward, motor2_speed);
-		Motor3Start(Direction_Backward, motor3_speed);
+		Stop();
 	}
 }
 
@@ -165,8 +181,8 @@ void initMotors(void)
 	initMotorStruct(&Motor4);
 
 	// Clocks
-	initPWMClocks(TIM2, &PWM_Data_Motor_Fwd, MOTOR_PWM_FREQ);
-	initPWMClocks(TIM3, &PWM_Data_Motor_Back, MOTOR_PWM_FREQ);
+	calcPWMClocks(TIM2, &PWM_Data_Motor_Fwd, MOTOR_PWM_FREQ);
+	calcPWMClocks(TIM3, &PWM_Data_Motor_Back, MOTOR_PWM_FREQ);
 
 	initMotor1();
 	initMotor2();
@@ -181,7 +197,7 @@ void initMotorStruct(MotorState* Motor_Data)
 	Motor_Data->Speed = 0;
 }
 
-void initPWMClocks(TIM_TypeDef* TIMx, PWM_Data * ClocksData, uint32_t Frequency)
+void calcPWMClocks(TIM_TypeDef* TIMx, PWM_Data * ClocksData, uint32_t Frequency)
 {
 	RCC_ClocksTypeDef RCC_ClocksStruct;
 	RCC_GetClocksFreq(&RCC_ClocksStruct);
@@ -209,7 +225,7 @@ void initMotor1(void)
 	initPWM(TIM3, PWM_Data_Motor_Back.Period, PWM_Data_Motor_Back.Prescaler, 1);
 }
 
-void Motor1Start(uint32_t Direction, uint8_t speed)
+void Motor1Start(uint8_t Direction, uint8_t speed)
 {
 	if (Motor1.Mode == Mode_Active) return;
 	if (Direction == Direction_Forward)
@@ -230,6 +246,7 @@ void Motor1Start(uint32_t Direction, uint8_t speed)
 void Motor1Speed(uint8_t speed)
 {
 	if ((Motor1.Mode == Mode_Stop) || (Motor1.Direction == Direction_None)) return;
+	if (Motor1.Speed == speed) return;
 	Motor1.Speed = speed;
 	if (Motor1.Direction == Direction_Forward)
 	{
@@ -265,7 +282,7 @@ void initMotor2(void)
 	initPWM(TIM3, PWM_Data_Motor_Back.Period, PWM_Data_Motor_Back.Prescaler, 2);
 }
 
-void Motor2Start(uint32_t Direction, uint8_t speed)
+void Motor2Start(uint8_t Direction, uint8_t speed)
 {
 	if (Motor2.Mode == Mode_Active) return;
 	if (Direction == Direction_Forward)
@@ -286,6 +303,7 @@ void Motor2Start(uint32_t Direction, uint8_t speed)
 void Motor2Speed(uint8_t speed)
 {
 	if ((Motor2.Mode == Mode_Stop) || (Motor2.Direction == Direction_None)) return;
+	if (Motor2.Speed == speed) return;
 	Motor2.Speed = speed;
 	if (Motor2.Direction == Direction_Forward)
 	{
@@ -321,7 +339,7 @@ void initMotor3(void)
 	initPWM(TIM3, PWM_Data_Motor_Back.Period, PWM_Data_Motor_Back.Prescaler, 3);
 }
 
-void Motor3Start(uint32_t Direction, uint8_t speed)
+void Motor3Start(uint8_t Direction, uint8_t speed)
 {
 	if (Motor3.Mode == Mode_Active) return;
 	if (Direction == Direction_Forward)
@@ -342,6 +360,7 @@ void Motor3Start(uint32_t Direction, uint8_t speed)
 void Motor3Speed(uint8_t speed)
 {
 	if ((Motor3.Mode == Mode_Stop) || (Motor3.Direction == Direction_None)) return;
+	if (Motor3.Speed == speed) return;
 	Motor3.Speed = speed;
 	if (Motor3.Direction == Direction_Forward)
 	{
@@ -377,7 +396,7 @@ void initMotor4(void)
 	initPWM(TIM3, PWM_Data_Motor_Back.Period, PWM_Data_Motor_Back.Prescaler, 4);
 }
 
-void Motor4Start(uint32_t Direction, uint8_t speed)
+void Motor4Start(uint8_t Direction, uint8_t speed)
 {
 	if (Motor4.Mode == Mode_Active) return;
 	if (Direction == Direction_Forward)
@@ -398,6 +417,7 @@ void Motor4Start(uint32_t Direction, uint8_t speed)
 void Motor4Speed(uint8_t speed)
 {
 	if ((Motor4.Mode == Mode_Stop) || (Motor3.Direction == Direction_None)) return;
+	if (Motor4.Speed == speed) return;
 	Motor4.Speed = speed;
 	if (Motor4.Direction == Direction_Forward)
 	{

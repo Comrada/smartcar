@@ -22,6 +22,7 @@
 #include "main.h"
 #include "usart.h"
 #include "motors.h"
+#include "stack.h"
 
 DMA_InitTypeDef  USART_DMA_Struct;
 
@@ -47,13 +48,15 @@ void printJSONToUSART(const char * data)
 
 void sendToUSART(const char *str)
 {
+	char * init_buff = "\0";
+	push(sendBuffer, str);
+
 	DMA_DeInit(DMA2_Stream7);
-	USART_DMA_Struct.DMA_BufferSize = strlen(str);
-	USART_DMA_Struct.DMA_Memory0BaseAddr = (uint32_t)str;
+	USART_DMA_Struct.DMA_BufferSize = strlen(init_buff);
+	USART_DMA_Struct.DMA_Memory0BaseAddr = (uint32_t)init_buff;
 	DMA_Init(DMA2_Stream7, &USART_DMA_Struct);
 	DMA_ITConfig(DMA2_Stream7, DMA_IT_TC, ENABLE);
-	DMA2_Stream7->CR |= (uint32_t)DMA_SxCR_EN; //DMA_Cmd(DMA2_Stream7, ENABLE);
-	while (DMA2_Stream7->NDTR) {}; //waiting for end of transmission
+	DMA2_Stream7->CR |= (uint32_t)DMA_SxCR_EN;
 }
 
 uint8_t parseUSARTCommand(const char * command)
@@ -68,11 +71,11 @@ uint8_t parseUSARTCommand(const char * command)
 		return 2;
 	} else if (strcmp(command, "left") == 0)
 	{
-		Left(1);
+		Left();
 		return 3;
 	} else if (strcmp(command, "right") == 0)
 	{
-		Right(1);
+		Right();
 		return 4;
 	} else if (strcmp(command, "back") == 0)
 	{
@@ -85,7 +88,10 @@ uint8_t parseUSARTCommand(const char * command)
 
 void initUSART(uint32_t baudrate)
 {
+
 	char * init_buff = "\0";
+	sendBuffer = newStack();
+
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
@@ -140,6 +146,7 @@ void initUSART(uint32_t baudrate)
 
 	USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);
 	NVIC_EnableIRQ(USART1_IRQn);
+	sendToUSART("\0");
 }
 
 
@@ -150,6 +157,19 @@ void DMA2_Stream7_IRQHandler(void)
 	if (DMA_GetITStatus(DMA2_Stream7, DMA_IT_TCIF7))
 	{
 		// Clear DMA Stream Transfer Complete interrupt pending bit
+
+		char * data;
+		while (data = top(sendBuffer))
+		{
+			DMA_DeInit(DMA2_Stream7);
+			USART_DMA_Struct.DMA_BufferSize = strlen(data);
+			USART_DMA_Struct.DMA_Memory0BaseAddr = (uint32_t)data;
+			DMA_Init(DMA2_Stream7, &USART_DMA_Struct);
+			DMA_ITConfig(DMA2_Stream7, DMA_IT_TC, ENABLE);
+			DMA2_Stream7->CR |= (uint32_t)DMA_SxCR_EN; //DMA_Cmd(DMA2_Stream7, ENABLE);
+			while (DMA2_Stream7->NDTR) {};
+			pop(sendBuffer);
+		}
 		DMA_ClearITPendingBit(DMA2_Stream7, DMA_IT_TCIF7);
 	}
 }

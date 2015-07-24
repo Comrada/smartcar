@@ -23,20 +23,22 @@
 #include "usart.h"
 #include "pwm.h"
 #include "delay.h"
+#include "stack.h"
+#include "mcu_init.h"
 
 int main(void)
 {
     SystemInit();
 
     initUSART(USART_BAUDRATE);
-
-    logToUSART("SmartCar ver. 1.0\r\n");
+    logToUSART("\r\nSmartCar ver. 1.0\r\n");
     logToUSART("Initializing...\r\n");
-
+    initMCU();
     initMotors();
 	logToUSART("Motors initialized...\r\nDone\r\n");
-    printJSONToUSART("\"ready\"");
+	printJSONToUSART("\"ready\"");
 
+	//-Just for fun------------------------------------------
 	GPIO_InitTypeDef PORT;
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD , ENABLE);
 	GPIO_StructInit(&PORT);
@@ -46,11 +48,13 @@ int main(void)
 	PORT.GPIO_Mode = GPIO_Mode_OUT;
 	PORT.GPIO_Speed = GPIO_Speed_2MHz;
 	GPIO_Init(GPIOD, &PORT);
-
+	//-------------------------------------------------------
     while (1) {
     	__NOP();
-    	 GPIOD->ODR ^=(GPIO_Pin_12 | GPIO_Pin_13);
+    	 GPIOD->ODR ^=(GPIO_Pin_12 | GPIO_Pin_13);	//Blinking
     	 Delay(1000);
     }
+
+    return 0;
 }
 

@@ -30,7 +30,6 @@
 
 #ifndef MAIN_H
 #define MAIN_H
-#endif
 
 #include "stm32f4xx.h"
 
@@ -38,3 +37,11 @@
 
 static int RCMode = 1;
 static const int USARTLog = 1;
+static float Vbat = 0.00f;
+static float CoreTemp = 0.00f;
+static uint16_t DevSign = 0x0000;
+static uint16_t DevRev = 0x0000;
+static uint32_t DevID[3] = {0x0, 0x0, 0x0};
+static int FlashSize = 0;
+
+#endif

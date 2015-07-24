@@ -30,7 +30,6 @@
 
 #ifndef PWM_H
 #define PWM_H
-#endif
 
 #include <stm32f4xx.h>
 #include <stm32f4xx_gpio.h>
@@ -39,3 +38,5 @@
 
 void initMotorPin(GPIO_TypeDef* GPIOx, uint16_t Pin, uint8_t PinSource, uint8_t GPIO_AF);
 void initPWM(TIM_TypeDef* TIMx, uint32_t Period, uint16_t Prescaler, uint8_t Channel);
+
+#endif

@@ -30,7 +30,6 @@
 
 #ifndef UART_H
 #define UART_H
-#endif
 
 #include "stm32f4xx.h"
 #include "stm32f4xx_usart.h"
@@ -41,9 +40,12 @@
 #define RECEIVE_BUFFER_SIZE 256
 
 volatile char receive_buffer[RECEIVE_BUFFER_SIZE]; // this will hold the received string
+static struct stack_t *sendBuffer;
 
 uint8_t parseUSARTCommand(const char * command);
 void sendToUSART(const char *str);
 void logToUSART(const char * message);
 void printJSONToUSART(const char * data);
 void initUSART(uint32_t baudrate);
+
+#endif

@@ -30,7 +30,6 @@
 
 #ifndef MOTORS_H
 #define MOTORS_H
-#endif
 
 #include "stm32f4xx.h"
 
@@ -52,51 +51,52 @@ typedef struct
 	                                Where you need exact time of pulse high*/
 }PWM_Data;
 
-#define Mode_Stop					((uint32_t)0x00000000)
-#define Mode_Active					((uint32_t)0x00000001)
-#define Direction_None				((uint32_t)0x00000000)
-#define Direction_Forward			((uint32_t)0x00000001)
-#define Direction_Backward			((uint32_t)0x02000002)
+#define Mode_Stop			((uint8_t)0x0000)
+#define Mode_Active			((uint8_t)0x0001)
+#define Direction_None		((uint8_t)0x0000)
+#define Direction_Forward	((uint8_t)0x0001)
+#define Direction_Backward	((uint8_t)0x0002)
 
 #define MOTOR_PWM_FREQ 1000					// 1kHz
-#define MOTOR_PWM_MAX_PULSE_WIDTH 500		// 500us
+#define MOTOR_PWM_MAX_PULSE_WIDTH 600		// 600us
 #define MOTOR_PWM_MIN_PULSE_WIDTH 0
 
 #define MOTOR_DELAY_AFTER_START 500
 #define MOTOR_DELAY_FOR_TURNING 500
 
 static uint32_t speeds[] = {0, 0, 0, 0, 0, 0};	//Array with pulses length of PWM signal
+static uint8_t max_speed;
 
 void initMotors(void);
-void initMotor1(void);
-void initMotor2(void);
-void initMotor3(void);
-void initMotor4(void);
 void initMotorStruct(MotorState* Motor_Data);
-void initPWMClocks(TIM_TypeDef* TIMx, PWM_Data * ClocksData, uint32_t Frequency);
+void calcPWMClocks(TIM_TypeDef* TIMx, PWM_Data * ClocksData, uint32_t Frequency);
 void calcSpeeds(void);
 
-void SoftStart(uint32_t Direction, uint32_t duration);
+void SoftStart(uint8_t Direction, uint8_t duration);
 void Forward(uint8_t speed);
 void Stop(void);
 void Back(uint8_t speed);
-void Left(uint8_t angle);
-void Right(uint8_t angle);
-void BackLeft(uint8_t angle);
-void BackRight(uint8_t angle);
+void Left();
+void Right();
 
-void Motor1Start(uint32_t Direction, uint8_t speed);
+void initMotor1(void);
+void Motor1Start(uint8_t Direction, uint8_t speed);
 void Motor1Speed(uint8_t speed);
 void Motor1Stop(void);
 
-void Motor2Start(uint32_t Direction, uint8_t speed);
+void initMotor2(void);
+void Motor2Start(uint8_t Direction, uint8_t speed);
 void Motor2Speed(uint8_t speed);
 void Motor2Stop(void);
 
-void Motor3Start(uint32_t Direction, uint8_t speed);
+void initMotor3(void);
+void Motor3Start(uint8_t Direction, uint8_t speed);
 void Motor3Speed(uint8_t speed);
 void Motor3Stop(void);
 
-void Motor4Start(uint32_t Direction, uint8_t speed);
+void initMotor4(void);
+void Motor4Start(uint8_t Direction, uint8_t speed);
 void Motor4Speed(uint8_t speed);
 void Motor4Stop(void);
+
+#endif
