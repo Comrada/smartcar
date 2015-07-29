@@ -40,7 +40,7 @@ void printJSONToUSART(const char * data)
 	{
 		char * json;
 		json = malloc(strlen(data) + 2);
-		sprintf(json, "{%s}", data);
+		sprintf(json, "{%s}\r\n", data);
 		sendToUSART(json);
 		free(json);
 	}
@@ -187,8 +187,8 @@ void USART1_IRQHandler(void)
 		} else{ // otherwise reset the character counter
 			receive_buffer[cnt] = '\0';
 			cnt = 0;
-			if (parseUSARTCommand(receive_buffer))
-				logToUSART(receive_buffer);
+			if (parseUSARTCommand(receive_buffer));
+				//logToUSART(receive_buffer);
 			else
 			{
 				char error[50];

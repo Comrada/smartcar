@@ -26,12 +26,6 @@ void initMotorPin(GPIO_TypeDef* GPIOx, uint16_t Pin, uint8_t PinSource, uint8_t 
 		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 	if (GPIOx == GPIOB)
 		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
-	if (GPIOx == GPIOC)
-		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
-	if (GPIOx == GPIOD)
-		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-	if (GPIOx == GPIOE)
-		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
 	GPIO_InitTypeDef Port;
 	Port.GPIO_Mode = GPIO_Mode_AF;
 	Port.GPIO_OType = GPIO_OType_PP;
@@ -44,22 +38,15 @@ void initMotorPin(GPIO_TypeDef* GPIOx, uint16_t Pin, uint8_t PinSource, uint8_t 
 
 void initPWM(TIM_TypeDef* TIMx, uint32_t Period, uint16_t Prescaler, uint8_t Channel)
 {
-	if (TIMx == TIM1)
-		RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
 	if (TIMx == TIM2)
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 	if (TIMx == TIM3)
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
-	if (TIMx == TIM4)
-		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
-	if (TIMx == TIM5)
-		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
 	TIM_TimeBaseInitTypeDef Timer;
 	Timer.TIM_CounterMode = TIM_CounterMode_Up;
 	Timer.TIM_Period = Period - 1;
 	Timer.TIM_Prescaler = Prescaler - 1;
 	Timer.TIM_ClockDivision = 0;
-	Timer.TIM_RepetitionCounter = 0;
 	TIM_TimeBaseInit(TIMx, &Timer);
 
 	TIM_OCInitTypeDef PWM;
@@ -76,4 +63,23 @@ void initPWM(TIM_TypeDef* TIMx, uint32_t Period, uint16_t Prescaler, uint8_t Cha
 	if (Channel == 4)
 		TIM_OC4Init(TIMx, &PWM);
 	TIM_Cmd(TIMx, ENABLE);
+}
+
+
+void calcPWMClocks(TIM_TypeDef* TIMx, PWM_Data * ClocksData, uint32_t Frequency)
+{
+	RCC_ClocksTypeDef RCC_ClocksStruct;
+	RCC_GetClocksFreq(&RCC_ClocksStruct);
+	ClocksData->IPB1_Clock = RCC_ClocksStruct.PCLK2_Frequency;	//Frequency of APB1
+	ClocksData->PWM_Frequency = Frequency;
+	if (TIMx == TIM2)
+	{
+		ClocksData->Period = (uint32_t)(ClocksData->IPB1_Clock / Frequency);
+		ClocksData->Prescaler = 1;
+	} else if (TIMx == TIM3)
+	{
+		ClocksData->Period = (uint32_t)(ClocksData->IPB1_Clock / Frequency / 2);	//TIM3 is 16bit, divide in half
+		ClocksData->Prescaler = 2;
+	}
+	ClocksData->MicrosecPerPeriod = (uint32_t)(1000000 / Frequency);
 }

@@ -6,7 +6,7 @@
  * @version v1.0
  * @ide     CooCox
  * @license GNU GPL v3
- * @brief   PWM initialization for SmartCar
+ * @brief   JSON module of SmartCar
  *
 @verbatim
    ----------------------------------------------------------------------
@@ -28,15 +28,19 @@
 @endverbatim
  */
 
-#ifndef PWM_H
-#define PWM_H
+#ifndef JSON_H
+#define JSON_H
 
-#include <stm32f4xx.h>
-#include <stm32f4xx_gpio.h>
-#include <stm32f4xx_rcc.h>
-#include <stm32f4xx_tim.h>
+#include <stddef.h>
 
-void initMotorPin(GPIO_TypeDef* GPIOx, uint16_t Pin, uint8_t PinSource, uint8_t GPIO_AF);
-void initPWM(TIM_TypeDef* TIMx, uint32_t Period, uint16_t Prescaler, uint8_t Channel);
+#include "motors.h"
+#include "usart.h"
+
+#define JSON_FORMAT_BUFF_LEN (size_t)(512);
+
+void rc_printMotorState(Motor motor);
+
+char * MotorModeToStr(uint8_t mode);
+char * MotorDirectionToStr(uint8_t direction);
 
 #endif

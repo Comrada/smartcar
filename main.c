@@ -36,13 +36,14 @@ int main(void)
     initMCU();
     initMotors();
 	logToUSART("Motors initialized...\r\nDone\r\n");
-	printJSONToUSART("\"ready\"");
+
+	printJSONToUSART("\"Device_mode\" : \"ready\"");
 
 	//-Just for fun------------------------------------------
 	GPIO_InitTypeDef PORT;
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD , ENABLE);
 	GPIO_StructInit(&PORT);
-	PORT.GPIO_Pin = (GPIO_Pin_12 | GPIO_Pin_13);
+	PORT.GPIO_Pin = (GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15);
 	PORT.GPIO_OType = GPIO_OType_PP;
 	PORT.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	PORT.GPIO_Mode = GPIO_Mode_OUT;
@@ -51,10 +52,7 @@ int main(void)
 	//-------------------------------------------------------
     while (1) {
     	__NOP();
-    	 GPIOD->ODR ^=(GPIO_Pin_12 | GPIO_Pin_13);	//Blinking
-    	 Delay(1000);
     }
 
     return 0;
 }
-
